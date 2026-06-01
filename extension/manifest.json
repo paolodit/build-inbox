@@ -17,6 +17,9 @@
     "nativeMessaging",
     "sidePanel"
   ],
+  "optional_host_permissions": [
+    "<all_urls>"
+  ],
   "action": {
     "default_title": "Open Build Inbox",
     "default_icon": {

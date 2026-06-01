@@ -93,10 +93,11 @@ Build Inbox asks for the minimum practical permissions for the MVP:
 
 - Microphone access to record local audio after the user clicks Start.
 - Active-tab access to read the current page URL/title and capture a visible-tab screenshot when you ask for one.
+- Optional site access for screenshots from the persistent side panel. Chrome may ask for this the first time you press **Shot** after the panel has been open for a while.
 - Native Messaging to talk to the local helper.
 - Downloads for the ZIP fallback.
 
-It does not request blanket `<all_urls>` host access or the broad `tabs` permission.
+It does not request the broad `tabs` permission. Optional site access is used only for visible-tab screenshots and page context; screenshots are still saved locally and are not uploaded by the extension.
 
 ## Connect The Local Helper
 

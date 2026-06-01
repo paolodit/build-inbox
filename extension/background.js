@@ -271,7 +271,16 @@ async function takeScreenshot() {
   }
 
   const tab = await getActiveTab();
-  const dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, { format: "png" });
+  let dataUrl;
+  try {
+    dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, { format: "png" });
+  } catch (error) {
+    const message = String(error?.message || error);
+    if (message.includes("activeTab") || message.includes("<all_urls>")) {
+      throw new Error("Chrome needs screenshot site access. Press Shot in the side panel again and grant the permission prompt.");
+    }
+    throw error;
+  }
   const id = nextScreenshotId();
   const text = currentTranscriptText();
   const nearTranscript = text ? text.slice(-240) : "";

@@ -58,6 +58,23 @@ function send(message) {
   });
 }
 
+async function ensureScreenshotPermission() {
+  if (!chrome.permissions?.contains || !chrome.permissions?.request) {
+    return;
+  }
+
+  const permission = { origins: ["<all_urls>"] };
+  const alreadyGranted = await chrome.permissions.contains(permission);
+  if (alreadyGranted) {
+    return;
+  }
+
+  const granted = await chrome.permissions.request(permission);
+  if (!granted) {
+    throw new Error("Screenshot permission was not granted. Chrome needs site access to capture from the persistent side panel.");
+  }
+}
+
 function formatElapsed(ms) {
   const seconds = Math.max(0, Math.floor(ms / 1000));
   const minutes = Math.floor(seconds / 60);
@@ -463,6 +480,7 @@ discardBtn.addEventListener("click", () => {
 
 shotBtn.addEventListener("click", () => {
   withStatus("Capturing screenshot...", async () => {
+    await ensureScreenshotPermission();
     const response = await send({ type: "take-screenshot" });
     if (userEditedTranscript && response.marker?.text && !transcript.value.includes(response.marker.text)) {
       transcript.value = `${transcript.value.trim()}\n${response.marker.text}`.trim();
