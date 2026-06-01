@@ -154,6 +154,8 @@ Build Inbox uses `urlMatches` to auto-select the right repo when you open a matc
 9. Press **Save**.
 10. Press **Codex** if the local Codex CLI is installed, or use the saved `codex-prompt.md` manually.
 
+Chrome may ask for microphone access the first time you start recording. During a stopped-but-unsaved capture, Build Inbox keeps the recorder tab ready so continuing the same session should not require another microphone approval.
+
 Keyboard shortcuts can be changed at:
 
 ```text
@@ -241,6 +243,12 @@ If you prefer this chat, press **Save**, then ask Codex chat to process the late
 
 ```text
 <your-repo>/.build-inbox/inbox/
+```
+
+For example:
+
+```text
+Please process the Build Inbox capture folder at <your-repo>/.build-inbox/inbox/<session-id>/ and follow codex-prompt.md.
 ```
 
 You can also open the saved `codex-prompt.md` and use it as the prompt. Attach the screenshots manually if your chat session cannot read local image files.

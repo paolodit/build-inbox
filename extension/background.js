@@ -215,8 +215,6 @@ async function stopCapture() {
     }
   }
 
-  chrome.tabs.remove(capture.recorderTabId).catch(() => undefined);
-
   return capture;
 }
 
@@ -226,11 +224,42 @@ async function continueCapture(options = {}) {
   }
 
   const tab = await getActiveTab();
-  await openMicrophonePermissionPage({ ...options, continueSession: true, sourceTab: tab });
+  const startOptions = { ...options, continueSession: true, sourceTab: tab };
+  if (capture.recorderTabId) {
+    try {
+      pendingStartOptions = normalizeStartOptions(startOptions, tab);
+      const response = await chrome.tabs.sendMessage(capture.recorderTabId, {
+        target: "permission-recorder",
+        type: "start-recording"
+      });
+      if (!response?.ok) {
+        throw new Error(response?.error || "Could not restart microphone recorder.");
+      }
+      return capture;
+    } catch {
+      pendingStartOptions = null;
+      capture.recorderTabId = null;
+      capture.recorderTarget = null;
+    }
+  }
+
+  await openMicrophonePermissionPage(startOptions);
   return capture;
 }
 
-function discardCapture() {
+async function closeCaptureRecorderTab() {
+  if (!capture?.recorderTabId) {
+    return;
+  }
+
+  const tabId = capture.recorderTabId;
+  capture.recorderTabId = null;
+  capture.recorderTarget = null;
+  await chrome.tabs.remove(tabId).catch(() => undefined);
+}
+
+async function discardCapture() {
+  await closeCaptureRecorderTab();
   capture = null;
   savedSession = null;
 }
@@ -524,6 +553,9 @@ async function saveViaNative() {
   const response = await postAndWait(port, { type: "capture:save:finish", requestId });
   port.disconnect();
   savedSession = response.result;
+  if (capture.stoppedAt) {
+    await closeCaptureRecorderTab();
+  }
   return savedSession;
 }
 
@@ -729,9 +761,8 @@ function publicState() {
   };
 }
 
-async function openMicrophonePermissionPage(options = {}) {
-  const tab = await getActiveTab();
-  pendingStartOptions = {
+function normalizeStartOptions(options = {}, tab) {
+  return {
     ...options,
     sourceTab: tab
       ? {
@@ -742,6 +773,11 @@ async function openMicrophonePermissionPage(options = {}) {
         }
       : undefined
   };
+}
+
+async function openMicrophonePermissionPage(options = {}) {
+  const tab = await getActiveTab();
+  pendingStartOptions = normalizeStartOptions(options, tab);
   await chrome.tabs.create({
     url: chrome.runtime.getURL("permission.html")
   });
@@ -777,7 +813,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
       case "permission-recorder-started": {
         let startedCapture;
-        if (pendingStartOptions?.continueSession && capture) {
+        const shouldContinue = capture && (pendingStartOptions?.continueSession || (!pendingStartOptions && capture.stoppedAt));
+        if (shouldContinue) {
           capture.stoppedAt = null;
           capture.segmentStartedAt = Number(message.startedAt) || Date.now();
           capture.recorderTarget = "permission-tab";
@@ -861,7 +898,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         return;
 
       case "discard-capture":
-        discardCapture();
+        await discardCapture();
         sendResponse({ ok: true, ...publicState() });
         return;
 

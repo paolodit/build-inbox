@@ -10,6 +10,7 @@ let transcriptChunks = [];
 let audioContext = null;
 let analyser = null;
 let meterTimer = null;
+let startRequest = null;
 
 function send(message) {
   return new Promise((resolve, reject) => {
@@ -172,7 +173,7 @@ async function startRecording() {
   startMeter(stream);
   startSpeechRecognition();
   await send({ type: "permission-recorder-started", startedAt });
-  status.textContent = "Recording. This tab will stay open in the background until you stop.";
+  status.textContent = "Recording. This tab stays ready in the background for this capture session.";
 }
 
 async function stopRecording() {
@@ -210,21 +211,39 @@ async function stopRecording() {
   stopMeter();
   stream?.getTracks().forEach((track) => track.stop());
   stream = null;
-  status.textContent = "Recording stopped.";
+  grantBtn.disabled = false;
+  grantBtn.textContent = "Start Again";
+  status.textContent = "Recording stopped. Return to Build Inbox, or start again here.";
   return stopped;
 }
 
-grantBtn.addEventListener("click", async () => {
+async function requestRecordingStart() {
+  if (startRequest) {
+    return startRequest;
+  }
+
   grantBtn.disabled = true;
   status.textContent = "Requesting microphone permission...";
 
-  try {
+  startRequest = (async () => {
     await startRecording();
     grantBtn.textContent = "Recording";
+  })();
+
+  try {
+    await startRequest;
   } catch (error) {
     grantBtn.disabled = false;
+    grantBtn.textContent = "Allow Microphone";
     status.textContent = `Microphone was not allowed: ${error.message}`;
+    throw error;
+  } finally {
+    startRequest = null;
   }
+}
+
+grantBtn.addEventListener("click", async () => {
+  requestRecordingStart().catch(() => undefined);
 });
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
@@ -242,5 +261,14 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
 
+  if (message.type === "start-recording") {
+    requestRecordingStart()
+      .then(() => sendResponse({ ok: true }))
+      .catch((error) => sendResponse({ ok: false, error: error.message }));
+    return true;
+  }
+
   return false;
 });
+
+requestRecordingStart().catch(() => undefined);

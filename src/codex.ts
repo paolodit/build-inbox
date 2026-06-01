@@ -118,10 +118,16 @@ export async function buildCodexCommand(options: CodexRunOptions): Promise<{
 export async function runCodex(options: CodexRunOptions): Promise<{ ok: boolean; message: string }> {
   const commandPath = await resolveCommand("codex");
   if (!commandPath) {
+    const chatPath = path.resolve(options.sessionPath);
     return {
       ok: false,
-      message:
-        "Codex CLI not found on the helper PATH. This Codex chat/app login is separate from the local `codex` command. Install/sign in to Codex CLI, restart Chrome, or run `build-inbox codex:run <session-id>` from a terminal."
+      message: [
+        "Codex CLI not found on the helper PATH.",
+        "This Codex chat/app login is separate from the local `codex` command.",
+        "Install/sign in to Codex CLI, restart Chrome, or run `build-inbox codex:run <session-id>` from a terminal.",
+        "See Help (?) in Build Inbox for more.",
+        `You can also use Codex chat/app: ask it to process the Build Inbox folder at ${chatPath} and follow codex-prompt.md.`
+      ].join(" ")
     };
   }
 
