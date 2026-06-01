@@ -91,13 +91,12 @@ If Chrome shows a different ID, use the ID shown on `chrome://extensions`.
 
 Build Inbox asks for the minimum practical permissions for the MVP:
 
-- Microphone/offscreen capture to record local audio.
+- Microphone access to record local audio after the user clicks Start.
 - Active-tab access to read the current page URL/title and capture a visible-tab screenshot when you ask for one.
 - Native Messaging to talk to the local helper.
 - Downloads for the ZIP fallback.
-- Storage for lightweight extension state.
 
-It does not request blanket `<all_urls>` host access.
+It does not request blanket `<all_urls>` host access or the broad `tabs` permission.
 
 ## Connect The Local Helper
 
@@ -291,6 +290,14 @@ npm test
 ```
 
 After changing extension files, reload the unpacked extension at `chrome://extensions`.
+
+Create a Chrome Web Store ZIP:
+
+```bash
+npm run package:chrome
+```
+
+The generated upload package is written to `chrome-package/` and strips the development-only manifest `key` used for the temporary unpacked-extension ID.
 
 ## Repository Layout
 

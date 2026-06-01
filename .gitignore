@@ -3,6 +3,7 @@ dist/
 .tmp-tests/
 .npm-cache/
 coverage/
+chrome-package/
 
 # Logs and package artifacts
 *.log

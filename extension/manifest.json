@@ -3,6 +3,7 @@
   "name": "Build Inbox",
   "description": "Capture voice, screenshots, URL context, and send local build briefs to Codex.",
   "version": "0.1.0",
+  "minimum_chrome_version": "114",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2UzWklSox9zTv7gFkPnk/IkDYKoTCuRxd+fDP02wqZd6fhhG46bFGJmRm5bOIAIaZvaa3pIvLTHYRXvLQP9pzucKcfUZf4mMuckiQYWeqZt6zDX4Pw/EKra4uHuf86HAS8VaHVVDCxq0UF0FOLAbzb8jq2Ab5WJI6XjRxtlgvtLNkHKSwykTNvEAtshFmOSUFj8Pt36HNfB3yZvPp/9HrC4XMhn+veTj5xWuY0TA5jBhtdDj/PdXGNpz6gLxZd5vVigrS1aNvr6+qIZnexBEJ90Mp5APRhZM3t5eG+pW2SCUK1Ppw7QYd9iTyXRwiR6dQOdHzgrJxoqw/OF7ScGxJQIDAQAB",
   "icons": {
     "16": "icons/build-16.png",
@@ -12,13 +13,9 @@
   },
   "permissions": [
     "activeTab",
-    "audioCapture",
     "downloads",
     "nativeMessaging",
-    "offscreen",
-    "sidePanel",
-    "storage",
-    "tabs"
+    "sidePanel"
   ],
   "action": {
     "default_title": "Open Build Inbox",

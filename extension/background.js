@@ -47,60 +47,6 @@ async function getActiveTab() {
   return tab;
 }
 
-async function ensureOffscreen() {
-  const offscreenUrl = chrome.runtime.getURL("offscreen.html");
-  if (chrome.runtime.getContexts) {
-    const contexts = await chrome.runtime.getContexts({
-      contextTypes: ["OFFSCREEN_DOCUMENT"],
-      documentUrls: [offscreenUrl]
-    });
-    if (contexts.length) {
-      return;
-    }
-  }
-
-  try {
-    await chrome.offscreen.createDocument({
-      url: "offscreen.html",
-      reasons: ["USER_MEDIA"],
-      justification: "Record microphone audio for a local Build Inbox capture."
-    });
-  } catch (error) {
-    if (!String(error.message || error).includes("Only a single offscreen document")) {
-      throw error;
-    }
-  }
-}
-
-function sendRuntimeMessage(message) {
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage(message, (response) => {
-      if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message));
-        return;
-      }
-      resolve(response);
-    });
-  });
-}
-
-async function waitForOffscreenReady() {
-  let lastError = null;
-  for (let attempt = 0; attempt < 20; attempt += 1) {
-    try {
-      const response = await sendRuntimeMessage({ target: "offscreen", type: "ping" });
-      if (response?.ok) {
-        return;
-      }
-    } catch (error) {
-      lastError = error;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 100));
-  }
-
-  throw new Error(lastError?.message || "Recorder page did not become ready.");
-}
-
 function currentTranscriptText() {
   const finalText = capture?.transcriptFinalText?.trim();
   if (finalText) {
@@ -203,7 +149,7 @@ async function createCaptureState(options = {}, startedAt = Date.now(), recorder
     segmentStartedAt: startedAt,
     pausedElapsedMs: 0,
     stoppedAt: null,
-    recorderTarget: recorder.target || "offscreen",
+    recorderTarget: recorder.target,
     recorderTabId: recorder.tabId,
     source: {
       browser: "Chrome",
@@ -234,15 +180,14 @@ async function stopCapture() {
     throw new Error("No active capture.");
   }
 
-  let response;
-  if (capture.recorderTarget === "permission-tab" && capture.recorderTabId) {
-    response = await chrome.tabs.sendMessage(capture.recorderTabId, {
-      target: "permission-recorder",
-      type: "stop-recording"
-    });
-  } else {
-    response = await sendRuntimeMessage({ target: "offscreen", type: "stop-recording" });
+  if (capture.recorderTarget !== "permission-tab" || !capture.recorderTabId) {
+    throw new Error("No active microphone recorder tab.");
   }
+
+  const response = await chrome.tabs.sendMessage(capture.recorderTabId, {
+    target: "permission-recorder",
+    type: "stop-recording"
+  });
 
   if (!response?.ok) {
     throw new Error(response?.error || "Could not stop recording.");
@@ -270,9 +215,7 @@ async function stopCapture() {
     }
   }
 
-  if (capture.recorderTarget === "permission-tab" && capture.recorderTabId) {
-    chrome.tabs.remove(capture.recorderTabId).catch(() => undefined);
-  }
+  chrome.tabs.remove(capture.recorderTabId).catch(() => undefined);
 
   return capture;
 }
