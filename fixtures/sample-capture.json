@@ -1,0 +1,32 @@
+{
+  "projectId": "sample-project",
+  "mode": "UX",
+  "createdAt": "2026-06-01T14:32:00.000Z",
+  "source": {
+    "browser": "Chrome",
+    "url": "http://localhost:3000/onboarding",
+    "title": "Onboarding - Sample"
+  },
+  "transcriptionMode": "browser",
+  "transcriptChunks": [
+    {
+      "timestamp": "2026-06-01T14:32:17.000Z",
+      "elapsedMs": 14000,
+      "source": "browser-speech",
+      "text": "This onboarding screen feels wrong and the primary action is hard to spot."
+    }
+  ],
+  "screenshots": [
+    {
+      "id": "001",
+      "type": "screenshot",
+      "timestamp": "2026-06-01T14:32:21.000Z",
+      "elapsedMs": 18231,
+      "url": "http://localhost:3000/onboarding",
+      "title": "Onboarding - Sample",
+      "filename": "screenshots/001.png",
+      "nearTranscript": "This onboarding screen feels wrong...",
+      "dataBase64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+    }
+  ]
+}

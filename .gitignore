@@ -1,0 +1,27 @@
+node_modules/
+dist/
+.tmp-tests/
+.npm-cache/
+coverage/
+
+# Logs and package artifacts
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.tgz
+*.zip
+
+# Local secrets and environment
+.env
+.env.*
+!.env.example
+
+# Build Inbox local runtime/capture data for this repo
+.build-inbox/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,32 @@
+{
+  "name": "build-inbox",
+  "version": "0.1.0",
+  "description": "Local-first voice, screenshot, and URL capture tool for creating Codex-ready build briefs.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "build-inbox": "dist/cli.js",
+    "build-inbox-native": "dist/native-entry.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "tsc --noEmit",
+    "test": "node --test dist/**/*.test.js"
+  },
+  "dependencies": {
+    "openai": "^4.104.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.29",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "dist",
+    "extension",
+    "LICENSE",
+    "README.md"
+  ]
+}

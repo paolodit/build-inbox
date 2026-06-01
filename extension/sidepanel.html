@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Build Inbox</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body class="sidepanel-body">
+    <main class="sidepanel-main">
+      <header>
+        <div>
+          <h1 id="screenTitle">Build Inbox</h1>
+          <p id="helperStatus">Checking helper...</p>
+          <div id="apiControls" class="api-controls">
+            <label class="tiny-toggle" title="Use OpenAI API to transcribe saved audio after capture">
+              <span id="transcribeLight" class="status-light"></span>
+              <span>Transcript</span>
+              <input id="transcribeToggle" type="checkbox" />
+            </label>
+            <label class="tiny-toggle" title="Use OpenAI API to classify and clean up the transcript. Screenshots are not sent.">
+              <span id="cleanupLight" class="status-light"></span>
+              <span>Cleanup</span>
+              <input id="cleanupToggle" type="checkbox" />
+            </label>
+          </div>
+          <p id="apiStatus">API: checking...</p>
+        </div>
+        <div class="header-actions">
+          <button id="helpToggle" class="icon-only" type="button" title="Help">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M9.8 9a2.2 2.2 0 1 1 3.6 1.7c-.9.6-1.4 1.1-1.4 2.3" /><path d="M12 17h.01" /></svg>
+          </button>
+          <span id="recordingDot" aria-hidden="true"></span>
+        </div>
+      </header>
+
+      <section id="helpPanel" class="help-panel" hidden>
+        <article>
+          <h2>Shortcuts</h2>
+          <dl id="helpShortcuts">
+            <div><dt>Record</dt><dd>Ctrl+Shift+Space</dd></div>
+            <div><dt>Screenshot</dt><dd>Ctrl+Shift+S</dd></div>
+            <div><dt>Save</dt><dd>Ctrl+Shift+B</dd></div>
+          </dl>
+          <p>Change shortcuts at <code>chrome://extensions/shortcuts</code>.</p>
+        </article>
+        <article>
+          <h2>OpenAI Transcript</h2>
+          <p>Optional. Browser speech works without an API key, but OpenAI transcription is usually faster to review and gives a crisper final transcript after save.</p>
+          <ol>
+            <li>Windows: run <code>setx OPENAI_API_KEY "..."</code>, then restart Chrome.</li>
+            <li>Mac: launch Chrome from a shell with <code>OPENAI_API_KEY</code>, or run <code>build-inbox openai:key:set</code>.</li>
+            <li>Enable it with the Transcript toggle, or run <code>build-inbox transcription:mode openai</code>.</li>
+          </ol>
+          <p>Privacy note: only <code>audio.webm</code> is sent for transcription. Screenshots are not sent.</p>
+        </article>
+        <article>
+          <h2>OpenAI Cleanup</h2>
+          <p>Optional. Cleanup/classification turns the final transcript into a generated task breakdown for Codex.</p>
+          <ol>
+            <li>Enable it with the Cleanup toggle, or run <code>build-inbox cleanup:enable</code>.</li>
+            <li>It generates <code>brief.generated.md</code> and <code>analysis.generated.json</code>.</li>
+          </ol>
+          <p>Privacy note: no screenshots go to OpenAI for cleanup. Only transcript text plus screenshot markers and filenames are sent.</p>
+        </article>
+        <article>
+          <h2>Codex CLI</h2>
+          <p>Build Inbox saves each capture inside the selected project repo under <code>.build-inbox/inbox/&lt;session-id&gt;/</code>.</p>
+          <p>That folder contains <code>codex-prompt.md</code>, <code>brief.md</code>, <code>metadata.json</code>, the transcript, audio, and screenshots. The Codex button runs the local <code>codex</code> command from the repo root and passes <code>codex-prompt.md</code> plus screenshots.</p>
+          <ol>
+            <li>Install/sign in to the local Codex CLI. Being signed in here is not always the same as having a <code>codex</code> command available to Chrome.</li>
+            <li>Add/select the project repo in Build Inbox.</li>
+            <li>Capture, stop, review the transcript, then press Codex.</li>
+            <li>If Codex cannot launch, use Save or Zip and run <code>build-inbox codex:run &lt;session-id&gt;</code> from a terminal.</li>
+          </ol>
+        </article>
+        <article>
+          <h2>Codex Chat</h2>
+          <p>If you prefer this chat instead of the local CLI, save the capture, then tell Codex chat to process the latest Build Inbox capture in <code>.build-inbox/inbox/</code>, or open <code>codex-prompt.md</code> from the capture folder and use it as the prompt.</p>
+          <p>Attach screenshots manually if the chat cannot read local image files.</p>
+        </article>
+        <article>
+          <h2>Toolbar</h2>
+          <p>Pin button to toolbar. Click Chrome's extensions icon, find Build Inbox, then click the pin. The side panel stays open while you work.</p>
+        </article>
+        <p class="credit">Built with <span class="orange-heart" aria-label="love"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.35-9.25-8.5C.7 8.7 2.9 4.5 7 4.5c2.05 0 3.6 1.1 5 3.05 1.4-1.95 2.95-3.05 5-3.05 4.1 0 6.3 4.2 4.25 8C19 16.65 12 21 12 21Z" /></svg></span> by <a href="https://www.twoguysonecat.com" target="_blank" rel="noreferrer">TwoGuysOneCat</a>.</p>
+      </section>
+
+      <section id="captureContent" class="capture-content">
+        <label class="stacked-label">
+          <span class="field-header">
+            <span>Project</span>
+            <button id="projectAddToggle" class="icon-only" type="button" title="Add project">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+            </button>
+          </span>
+          <select id="projectSelect"></select>
+        </label>
+
+        <section id="projectPanel" class="project-panel" hidden>
+          <label>
+            Name
+            <input id="projectName" type="text" autocomplete="off" placeholder="TV Studio" />
+          </label>
+          <label>
+            Repo path
+            <input id="projectRepo" type="text" autocomplete="off" placeholder="C:\Code\tv-studio" />
+          </label>
+          <label>
+            URL matches
+            <input id="projectMatches" type="text" autocomplete="off" placeholder="localhost:3000,tv-studio.local" />
+          </label>
+          <label>
+            GitHub repo
+            <input id="projectGithub" type="text" autocomplete="off" placeholder="owner/repo" />
+          </label>
+          <div class="project-panel-actions">
+            <button id="projectSaveBtn" type="button">Add</button>
+            <button id="projectCancelBtn" type="button">Cancel</button>
+          </div>
+        </section>
+
+        <label class="mode-label" hidden>
+          Mode
+          <select id="modeSelect">
+            <option selected>Auto</option>
+            <option>Bug</option>
+            <option>UX</option>
+            <option>Feature</option>
+            <option>Note</option>
+            <option>Question</option>
+            <option>Decision</option>
+            <option>Refactor</option>
+          </select>
+        </label>
+
+        <section class="recording-row" aria-label="Recording status">
+          <div id="meter" class="meter" title="Microphone level">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <span id="modeHint">Auto: Note</span>
+        </section>
+
+        <section class="controls" aria-label="Capture controls">
+          <button id="startBtn" class="command-button" type="button" title="Start or stop capture (Ctrl+Shift+Space)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7V5Z" /></svg>
+            <span>Start</span>
+          </button>
+          <button id="shotBtn" class="command-button" type="button" title="Take screenshot (Ctrl+Shift+S)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h4l2-3h4l2 3h4v11H4V8Z" /><circle cx="12" cy="13.5" r="3" /></svg>
+            <span>Shot</span>
+          </button>
+        </section>
+
+        <section id="restartPanel" class="restart-panel" hidden>
+          <p>This capture is stopped but not saved.</p>
+          <div>
+            <button id="continueBtn" type="button">Continue</button>
+            <button id="saveNewBtn" type="button">Save & New</button>
+            <button id="discardBtn" type="button">Discard</button>
+          </div>
+        </section>
+
+        <section class="stats">
+          <span id="elapsed">0:00</span>
+          <span id="shotCount">0 screenshots</span>
+        </section>
+
+        <section id="thumbnailStrip" class="thumbnail-strip" aria-label="Captured screenshots" hidden></section>
+
+        <label class="transcript-label">
+          Transcript
+          <textarea id="transcript" rows="10" spellcheck="true" placeholder="Browser transcript or manual notes appear here."></textarea>
+        </label>
+
+        <section class="actions" aria-label="Save actions">
+          <button id="saveBtn" class="command-button" type="button" title="Save Build Brief (Ctrl+Shift+B)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h12l2 2v14H5V4Z" /><path d="M8 4v6h8V4M8 20v-6h8v6" /></svg>
+            <span>Save</span>
+          </button>
+          <button id="codexBtn" class="command-button" type="button" title="Send saved capture to Codex">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 4 8v8l8 4 8-4V8l-8-4Z" /><path d="M12 12v8M4 8l8 4 8-4" /></svg>
+            <span>Codex</span>
+          </button>
+          <button id="zipBtn" class="command-button" type="button" title="Download ZIP fallback">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10M8 10l4 4 4-4" /><path d="M5 19h14" /></svg>
+            <span>Zip</span>
+          </button>
+        </section>
+        <p class="credit main-credit">Built with <span class="orange-heart" aria-label="love"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.35-9.25-8.5C.7 8.7 2.9 4.5 7 4.5c2.05 0 3.6 1.1 5 3.05 1.4-1.95 2.95-3.05 5-3.05 4.1 0 6.3 4.2 4.25 8C19 16.65 12 21 12 21Z" /></svg></span> by <a href="https://www.twoguysonecat.com" target="_blank" rel="noreferrer">TwoGuysOneCat</a>.</p>
+      </section>
+
+      <p id="statusLine">Ready.</p>
+    </main>
+    <script src="popup.js" type="module"></script>
+  </body>
+</html>
