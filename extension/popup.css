@@ -549,6 +549,8 @@ body.help-mode #statusLine {
   padding: 8px 12px 10px;
   border-top: 1px solid #d8deea;
   background: #f7f8fb;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 button {
