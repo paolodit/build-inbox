@@ -19,6 +19,7 @@ import {
   ensureDir,
   formatSessionDate,
   pathExists,
+  safeRelativePath,
   slugify
 } from "./utils.js";
 import { transcribeWithOpenAI } from "./transcribe.js";
@@ -141,8 +142,9 @@ export async function saveCaptureSession(payload: CaptureSavePayload): Promise<S
       continue;
     }
 
-    const filename =
-      audio.filename || (audioInputs.length > 1 ? `audio-${String(index + 1).padStart(3, "0")}.webm` : "audio.webm");
+    const filename = safeRelativePath(
+      audio.filename || (audioInputs.length > 1 ? `audio-${String(index + 1).padStart(3, "0")}.webm` : "audio.webm")
+    );
     const audioPath = path.join(sessionPath, filename);
     await writeFileFromCaptureData(audioPath, audio.dataBase64, audio.tempPath);
     savedAudioClips.push({
@@ -159,7 +161,7 @@ export async function saveCaptureSession(payload: CaptureSavePayload): Promise<S
     await ensureDir(screenshotDir);
     for (const [index, shot] of payload.screenshots.entries()) {
       const id = shot.id || String(index + 1).padStart(3, "0");
-      const filename = shot.filename || `screenshots/${id}.png`;
+      const filename = safeRelativePath(shot.filename || `screenshots/${id}.png`);
       const targetPath = path.join(sessionPath, filename);
       await ensureDir(path.dirname(targetPath));
       await writeFileFromCaptureData(targetPath, shot.dataBase64, shot.tempPath);

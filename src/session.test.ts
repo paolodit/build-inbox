@@ -63,3 +63,39 @@ test("saveCaptureSession writes a local build brief bundle", async () => {
 
   await rm(root, { recursive: true, force: true });
 });
+
+test("saveCaptureSession rejects unsafe capture filenames", async () => {
+  const root = path.join(process.cwd(), ".tmp-tests", `session-unsafe-${Date.now()}`);
+  const repoPath = path.join(root, "repo");
+  process.env.BUILD_INBOX_HOME = path.join(root, "home");
+  await mkdir(repoPath, { recursive: true });
+
+  const config = defaultConfig();
+  config.projects.push({
+    id: "sample-project",
+    name: "Sample Project",
+    repoPath,
+    urlMatches: ["localhost:3000"]
+  });
+  await saveConfig(config);
+
+  const payload: CaptureSavePayload = {
+    projectId: "sample-project",
+    mode: "Bug",
+    createdAt: "2026-06-01T14:32:00.000Z",
+    source: {
+      browser: "Chrome",
+      url: "http://localhost:3000/onboarding",
+      title: "Onboarding - Sample"
+    },
+    transcriptRawText: "Trying to escape the session folder.",
+    audio: {
+      filename: "../outside.webm",
+      dataBase64: "dGVzdA=="
+    }
+  };
+
+  await assert.rejects(() => saveCaptureSession(payload), /Unsafe relative path/);
+
+  await rm(root, { recursive: true, force: true });
+});

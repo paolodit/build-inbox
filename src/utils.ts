@@ -104,8 +104,19 @@ export function moduleDir(importMetaUrl: string): string {
 }
 
 export function safeRelativePath(relativePath: string): string {
-  const normalized = path.normalize(relativePath);
-  if (path.isAbsolute(normalized) || normalized.startsWith("..") || normalized.includes(`..${path.sep}`)) {
+  const trimmed = relativePath.trim();
+  const slashPath = trimmed.replace(/\\/g, "/");
+  const segments = slashPath.split("/");
+  const normalized = path.posix.normalize(slashPath);
+  if (
+    !trimmed ||
+    normalized === "." ||
+    path.isAbsolute(trimmed) ||
+    path.win32.isAbsolute(trimmed) ||
+    /^[a-zA-Z]:/.test(trimmed) ||
+    slashPath.startsWith("/") ||
+    segments.includes("..")
+  ) {
     throw new Error(`Unsafe relative path: ${relativePath}`);
   }
   return normalized;

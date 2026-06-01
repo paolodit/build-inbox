@@ -55,6 +55,8 @@ repo/
 Clone the repo, install dependencies, build the TypeScript helper, then link the CLI locally:
 
 ```bash
+git clone https://github.com/paolodit/build-inbox.git
+cd build-inbox
 npm install
 npm run build
 npm link
@@ -84,6 +86,18 @@ aidbkhnchloaafdfbadlcnaimnaloglf
 ```
 
 If Chrome shows a different ID, use the ID shown on `chrome://extensions`.
+
+## Extension Permissions
+
+Build Inbox asks for the minimum practical permissions for the MVP:
+
+- Microphone/offscreen capture to record local audio.
+- Active-tab access to read the current page URL/title and capture a visible-tab screenshot when you ask for one.
+- Native Messaging to talk to the local helper.
+- Downloads for the ZIP fallback.
+- Storage for lightweight extension state.
+
+It does not request blanket `<all_urls>` host access.
 
 ## Connect The Local Helper
 
@@ -171,6 +185,8 @@ setx OPENAI_API_KEY "your-key-here"
 ```
 
 Restart Chrome after using `setx`, because Chrome-launched native helpers inherit Chrome's environment.
+
+The helper-local key fallback writes to `~/.build-inbox/config.local.json` with user-only file permissions where the OS supports them. Environment variables or an OS keychain are still preferred for long-term use.
 
 Enable OpenAI transcription:
 

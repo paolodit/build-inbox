@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { chmod, mkdir, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { BuildInboxConfig, ProjectConfig } from "./types.js";
@@ -68,7 +68,7 @@ export async function loadConfig(): Promise<BuildInboxConfig> {
 }
 
 export async function saveConfig(config: BuildInboxConfig): Promise<void> {
-  await mkdir(getConfigDir(), { recursive: true });
+  await mkdir(getConfigDir(), { recursive: true, mode: 0o700 });
   await writeFile(getConfigPath(), `${JSON.stringify(config, null, 2)}\n`, "utf8");
 }
 
@@ -83,8 +83,18 @@ export async function loadLocalConfig(): Promise<BuildInboxLocalConfig> {
 }
 
 export async function saveLocalConfig(config: BuildInboxLocalConfig): Promise<void> {
-  await mkdir(getConfigDir(), { recursive: true });
-  await writeFile(getLocalConfigPath(), `${JSON.stringify(config, null, 2)}\n`, "utf8");
+  await mkdir(getConfigDir(), { recursive: true, mode: 0o700 });
+  const localConfigPath = getLocalConfigPath();
+  await writeFile(localConfigPath, `${JSON.stringify(config, null, 2)}\n`, {
+    encoding: "utf8",
+    mode: 0o600
+  });
+
+  try {
+    await chmod(localConfigPath, 0o600);
+  } catch {
+    // Best effort on Windows and locked-down filesystems.
+  }
 }
 
 export async function getOpenAIApiKey(): Promise<string | undefined> {

@@ -171,18 +171,20 @@ async function handleMessage(message: NativeMessage): Promise<void> {
         }
 
         if (pending.payload.audio) {
-          pending.payload.audio.tempPath = path.join(pending.tempRoot, pending.payload.audio.filename || "audio.webm");
+          pending.payload.audio.filename = safeRelativePath(pending.payload.audio.filename || "audio.webm");
+          pending.payload.audio.tempPath = path.join(pending.tempRoot, pending.payload.audio.filename);
           delete pending.payload.audio.dataBase64;
         }
 
         for (const [index, audio] of (pending.payload.audioClips || []).entries()) {
-          const filename = audio.filename || `audio-${String(index + 1).padStart(3, "0")}.webm`;
+          const filename = safeRelativePath(audio.filename || `audio-${String(index + 1).padStart(3, "0")}.webm`);
           audio.filename = filename;
           audio.tempPath = path.join(pending.tempRoot, filename);
           delete audio.dataBase64;
         }
 
         for (const shot of pending.payload.screenshots || []) {
+          shot.filename = safeRelativePath(shot.filename || `screenshots/${shot.id || "001"}.png`);
           shot.tempPath = path.join(pending.tempRoot, shot.filename);
           delete shot.dataBase64;
         }
