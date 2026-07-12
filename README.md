@@ -6,6 +6,9 @@
 
 **Voice + screenshots + URL context -> local Build Brief -> Codex task.**
 
+> [!IMPORTANT]
+> **We were early.** Build Inbox explored the idea of turning annotated context into Codex-ready work before the workflow landed inside Codex itself. Codex now has its own **Annotate** feature, which covers the core experience this project prototyped. Use Annotate in Codex for the modern path; this repo remains as a fun local-first proof of concept from just before the future arrived.
+
 Build Inbox is a local-first Chrome extension and Node.js helper for capturing quick coding, product, UX, bug, and implementation walkthroughs. It records your voice, browser transcript, visible-tab screenshots, page URL, title, and timing context, then saves a structured task bundle inside the selected project repo.
 
 No cloud backend is required. OpenAI API usage is optional, helper-only, and off by default.
